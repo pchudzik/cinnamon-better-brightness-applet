@@ -1,0 +1,6 @@
+{
+	"uuid": "better_brightness@pchudzik.github.com",
+	"name": "Better birightness settings",
+	"description": "Click on the applet to configure display birightness and stuff",
+	"icon": "Brightness"
+}

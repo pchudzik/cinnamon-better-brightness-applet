@@ -34,11 +34,11 @@ MyApplet.prototype = {
 
             this.brightnessSlider = new PopupMenu.PopupSliderMenuItem(0);
             this.brightnessSlider.connect('value-changed', Lang.bind(this, this.brightnessSliderOnChange));
-            this.brightnessLabel = new PopupMenu.PopupMenuItem("", {reactive: false});
+            this.brightnessLabel = new PopupMenu.PopupMenuItem('', {reactive: false});
 
             this.dimSlider = new PopupMenu.PopupSliderMenuItem(0);
             this.dimSlider.connect('value-changed', Lang.bind(this, this.dimSliderOnChange));
-            this.dimLabel = new PopupMenu.PopupMenuItem("", {reactive: false});
+            this.dimLabel = new PopupMenu.PopupMenuItem('', {reactive: false});
             
             this.menu.addMenuItem(new PopupMenu.PopupMenuSection());  
             this.menu.addMenuItem(this.brightnessLabel);
@@ -183,7 +183,7 @@ BrightnessManager.prototype = {
                     '--object-path /org/gnome/SettingsDaemon/Power ' +
                     '--method org.gnome.SettingsDaemon.Power.Screen.SetPercentage ' + this._brightness);
         } catch(e) {
-            global.logError("Cannot set screen bgrightness to value: " + this._brightness);
+            global.logError('Cannot set screen bgrightness to value: ' + this._brightness, e);
         }
     }
 };
@@ -205,27 +205,37 @@ DimManager.prototype = {
     getDimTimout: function() {
         return this._dimTimeout;
     },
+    settingsManager: {
+        getSystemProperty: function(key) {
+            try {
+                return GLib.spawn_command_line_sync('gsettings get ' + key).toString();
+            } catch(e) {
+                global.logError('Can not get system property for key ' + key, e);
+            }
+        },
+        setSystemProperty: function(key, value) {
+            try {
+                Util.spawnCommandLine('gsettings set ' + key + ' ' + value);
+            } catch(e) {
+                global.logError('Can not set system property for key ' + key, e);
+            }
+        }
+    },
     _getSystemDimTimout: function() {
         try {
-            var timeout = GLib.spawn_command_line_sync('dconf read /org/gnome/settings-daemon/plugins/power/sleep-display-ac').toString();
+            var timeout = this.settingsManager.getSystemProperty('org.gnome.settings-daemon.plugins.power sleep-display-ac');
             //returned values is eg: "true,2"
             var result = parseInt(timeout.split(',')[1]);
             return parseInt(result);
         } catch(e) {
-            global.logError("Can not get system dim timeout.", e);
+            global.logError('Can not get system dim timeout.', e);
             return 600;
         }
     },
     _setSystemDimTimeout: function() {
-        var setDimTimeForKey = function(key, value) {
-            try {
-                Util.spawnCommandLine('dconf write /org/gnome/settings-daemon/plugins/power/' + key + ' ' + value);
-            } catch(e) {
-                global.logError("Can not set system dim timout for key " + key, e);
-            }
-        };
-        setDimTimeForKey('sleep-display-ac', this._dimTimeout);
-        setDimTimeForKey('sleep-display-battery', this._dimTimeout);
+        this.settingsManager.setSystemProperty('org.gnome.settings-daemon.plugins.power sleep-display-ac', this._dimTimeout);
+        this.settingsManager.setSystemProperty('org.gnome.settings-daemon.plugins.power sleep-display-battery', this._dimTimeout);
+        this.settingsManager.setSystemProperty('org.gnome.desktop.session idle-dealy', this._dimTimeout);
     }
 }
  

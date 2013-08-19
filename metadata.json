@@ -1,6 +1,6 @@
 {
 	"uuid": "better_brightness@pchudzik.github.com",
 	"name": "Better birightness settings",
-	"description": "Click on the applet to configure display birightness and stuff",
+	"description": "Allows to configure screen brightness and time after screen will be turned off",
 	"icon": "Brightness"
 }
